@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup - MiniFlix</title>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="auth-page">
+
+  <!-- Top Logo -->
+  <header class="auth-header">
+    <a href="index.html" class="logo">MINIFLIX</a>
+  </header>
+
+  <!-- Signup Card -->
+  <main class="auth-main">
+    <div class="auth-card">
+
+      <h1>Sign Up</h1>
+      <p class="auth-subtitle">Create your MiniFlix account</p>
+
+      <form id="signupForm" class="auth-form">
+
+        <input
+          type="text"
+          id="name"
+          class="auth-input"
+          placeholder="Full Name"
+          required
+        />
+
+        <input
+          type="email"
+          id="email"
+          class="auth-input"
+          placeholder="Email"
+          required
+        />
+
+        <input
+          type="password"
+          id="password"
+          class="auth-input"
+          placeholder="Password"
+          required
+        />
+
+        <input
+          type="password"
+          id="confirmPassword"
+          class="auth-input"
+          placeholder="Confirm Password"
+          required
+        />
+
+        <label class="terms">
+          <input type="checkbox" id="terms" required />
+          <span>
+            I agree to the MiniFlix Terms of Service and Privacy Policy.
+          </span>
+        </label>
+
+        <div id="signupError" class="auth-error"></div>
+
+        <button type="submit" class="auth-button">
+          Create Account
+        </button>
+
+      </form>
+
+      <div class="auth-divider">
+        <span>OR</span>
+      </div>
+
+      <p class="auth-text">
+        Already have an account?
+        <a href="login.html" class="auth-link red-link">
+          Sign in now
+        </a>
+      </p>
+
+      <p class="auth-small">
+        This is a demo signup UI. Later we will connect it with Node.js,
+        MySQL and password hashing using bcrypt.
+      </p>
+
+      <a href="index.html" class="back-home">
+        ← Back to Home
+      </a>
+
+    </div>
+  </main>
+
+  <script>
+  const signupForm = document.getElementById("signupForm");
+  const password = document.getElementById("password");
+  const confirmPassword = document.getElementById("confirmPassword");
+  const signupError = document.getElementById("signupError");
+
+  signupForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    // Frontend validation first
+    if (password.value.length < 6) {
+      signupError.style.display = "block";
+      signupError.textContent = "Password must be at least 6 characters long.";
+      return;
+    }
+
+    if (password.value !== confirmPassword.value) {
+      signupError.style.display = "block";
+      signupError.textContent = "Passwords do not match.";
+      return;
+    }
+
+    signupError.style.display = "none";
+
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name, email, password: password.value })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        signupError.style.display = "block";
+        signupError.textContent = data.message || "Signup failed";
+        return;
+      }
+
+      alert("Signup successful! Please login.");
+      window.location.href = "login.html";
+
+    } catch (error) {
+      console.error(error);
+      signupError.style.display = "block";
+      signupError.textContent = "Server error. Make sure backend is running.";
+    }
+  });
+</script>
+<script src="js/notifications.js"></script>
+</body>
+</html>

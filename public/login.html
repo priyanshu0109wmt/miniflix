@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - MiniFlix</title>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="auth-page">
+
+  <!-- Top Logo -->
+  <header class="auth-header">
+    <a href="index.html" class="logo">MINIFLIX</a>
+  </header>
+
+  <!-- Login Card -->
+  <main class="auth-main">
+    <div class="auth-card">
+
+      <h1>Sign In</h1>
+      <p class="auth-subtitle">Login to continue watching</p>
+
+      <form id="loginForm" class="auth-form">
+
+        <input
+          type="email"
+          id="email"
+          class="auth-input"
+          placeholder="Email"
+          required
+        />
+
+        <input
+          type="password"
+          id="password"
+          class="auth-input"
+          placeholder="Password"
+          required
+        />
+
+        <div class="auth-options">
+          <label class="remember-me">
+            <input type="checkbox" />
+            Remember me
+          </label>
+
+          <a href="#" class="auth-link">Need help?</a>
+        </div>
+
+        <button type="submit" class="auth-button">
+          Sign In
+        </button>
+
+      </form>
+
+      <div class="auth-divider">
+        <span>OR</span>
+      </div>
+
+      <p class="auth-text">
+        New to MiniFlix?
+        <a href="signup.html" class="auth-link red-link">
+          Sign up now
+        </a>
+      </p>
+
+      <p class="auth-small">
+        This is a demo login UI. Later we will connect it with Node.js,
+        MySQL and JWT authentication.
+      </p>
+
+      <a href="index.html" class="back-home">
+        ← Back to Home
+      </a>
+
+    </div>
+  </main>
+
+  <script>
+  const loginForm = document.getElementById("loginForm");
+
+  loginForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Login failed");
+        return;
+      }
+
+      // Save token and user info
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      alert("Login successful!");
+      window.location.href = "index.html";
+
+    } catch (error) {
+      console.error(error);
+      alert("Server error. Make sure backend is running.");
+    }
+    });
+  </script>
+  <script src="js/notifications.js"></script>
+</body>
+</html>

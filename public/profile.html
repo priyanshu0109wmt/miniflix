@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile - MiniFlix</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="index.html" class="logo">MINIFLIX</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="mylist.html">My List</a>
+        <a href="pricing.html">Plans</a>
+        <a href="admin.html">Admin</a>
+        <a href="profile.html" class="active">Profile</a>
+      </div>
+    </div>
+        <div class="nav-right">
+      <div class="search-box">
+        <input type="text" placeholder="Search movies..." id="navSearch" />
+      </div>
+
+      <!-- 🔔 Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <button class="notif-bell" id="notifBell">
+          🔔
+          <span class="notif-badge hidden" id="notifBadge">0</span>
+        </button>
+        <div class="notif-dropdown hidden" id="notifDropdown">
+          <div class="notif-header">
+            <span>Notifications</span>
+            <button class="notif-mark-read" id="markReadBtn">Mark all read</button>
+          </div>
+          <div class="notif-list" id="notifList">
+            <p class="notif-empty">No notifications yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <a href="profile.html" class="avatar">U</a>
+      <a href="login.html" class="btn-small" id="navLoginBtn">Login</a>
+    </div>
+  </nav>
+
+  <!-- Profile Page -->
+  <main class="profile-page">
+
+    <!-- Not Logged In State -->
+    <section id="notLoggedIn" class="empty-state hidden">
+      <h2>Please login to view your profile</h2>
+      <a href="login.html" class="btn btn-red">Sign In</a>
+    </section>
+
+    <!-- Profile Content -->
+    <div id="profileContent" class="hidden">
+
+      <!-- Profile Header -->
+      <section class="profile-hero">
+        <div class="profile-avatar-large" id="profileAvatar">U</div>
+        <div class="profile-info">
+          <h1 id="profileName">User Name</h1>
+          <p id="profileEmail">user@example.com</p>
+          <div class="profile-actions">
+            <button class="btn btn-light" onclick="alert('Edit profile feature coming soon!')">Edit Profile</button>
+            <button class="btn btn-red" id="logoutBtn">Logout</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Cards -->
+      <section class="profile-grid">
+
+        <!-- Membership Plan (DYNAMIC) -->
+        <article class="profile-card">
+          <h2>Membership Plan</h2>
+          <div id="subscriptionBox">
+            <p class="plans-loading">Loading subscription…</p>
+          </div>
+        </article>
+
+        <!-- Account Settings -->
+        <article class="profile-card">
+          <h2>Account Settings</h2>
+          <div class="profile-item">
+            <span>Name</span>
+            <span class="item-value" id="settingName">-</span>
+          </div>
+          <div class="profile-item">
+            <span>Email</span>
+            <span class="item-value" id="settingEmail">-</span>
+          </div>
+          <div class="profile-item">
+            <span>Password</span>
+            <span class="item-value">••••••••</span>
+          </div>
+          <div class="profile-item">
+            <span>Role</span>
+            <span class="item-value" id="settingRole">-</span>
+          </div>
+        </article>
+
+        <!-- My Activity -->
+        <article class="profile-card">
+          <h2>My Activity</h2>
+          <a href="mylist.html" class="profile-item link-item">
+            <span>My List</span>
+            <span class="item-arrow">›</span>
+          </a>
+          <a href="#" class="profile-item link-item" onclick="alert('Watch history coming soon!')">
+            <span>Watch History</span>
+            <span class="item-arrow">›</span>
+          </a>
+          <a href="#" class="profile-item link-item" onclick="alert('Ratings feature coming soon!')">
+            <span>Ratings</span>
+            <span class="item-arrow">›</span>
+          </a>
+        </article>
+
+        <!-- Devices -->
+        <article class="profile-card">
+          <h2>Devices</h2>
+          <div class="profile-item">
+            <span>Current Browser</span>
+            <span class="item-value active-device">Active</span>
+          </div>
+          <button class="btn danger-btn full-width-btn" id="signOutAllBtn">Sign Out of All Devices</button>
+        </article>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="mylist.html">My List</a>
+      <a href="pricing.html">Plans</a>
+      <a href="admin.html">Admin</a>
+      <a href="#">Help</a>
+    </div>
+    <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
+  </footer>
+
+  <script>
+    const notLoggedIn = document.getElementById("notLoggedIn");
+    const profileContent = document.getElementById("profileContent");
+
+    function getToken() { return localStorage.getItem("token"); }
+
+    function loadProfile() {
+      const token = getToken();
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (!token || !user) {
+        notLoggedIn.classList.remove("hidden");
+        profileContent.classList.add("hidden");
+        return;
+      }
+
+      notLoggedIn.classList.add("hidden");
+      profileContent.classList.remove("hidden");
+
+      document.getElementById("profileName").textContent = user.name;
+      document.getElementById("profileEmail").textContent = user.email;
+      document.getElementById("profileAvatar").textContent = user.name.charAt(0).toUpperCase();
+      document.getElementById("settingName").textContent = user.name;
+      document.getElementById("settingEmail").textContent = user.email;
+      document.getElementById("settingRole").textContent =
+        user.role.charAt(0).toUpperCase() + user.role.slice(1);
+
+      loadSubscription();
+    }
+
+    async function loadSubscription() {
+      const box = document.getElementById("subscriptionBox");
+      const token = getToken();
+
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/me", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          box.innerHTML = "<p class='plans-loading'>Failed to load subscription.</p>";
+          return;
+        }
+
+        const user = await res.json();
+        const status = user.subscriptionStatus || "none";
+
+        if (status === "active") {
+          const end = new Date(user.subscriptionEnd);
+          const days = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
+          const features =
+            typeof user.planFeatures === "string"
+              ? JSON.parse(user.planFeatures)
+              : user.planFeatures || [];
+
+          box.innerHTML = `
+            <div class="plan-box">
+              <div class="plan-box-head">
+                <span class="plan-badge">${user.planName || "Member"}</span>
+                <span class="status-badge status-active">ACTIVE</span>
+              </div>
+              <div class="plan-price">$${Number(user.planPrice).toFixed(2)}<span>/month</span></div>
+              <p class="sub-renew">
+                ${days > 0 ? `Renews in ${days} day${days !== 1 ? "s" : ""}` : "Renews soon"}
+                — ${end.toLocaleDateString()}
+              </p>
+              <ul class="plan-features">
+                ${features.map(f => `<li><b class="perk-check">✓</b> ${f}</li>`).join("")}
+              </ul>
+              <div class="sub-actions">
+                <a href="pricing.html" class="btn btn-light full-width-btn">Change Plan</a>
+                <button class="btn danger-btn full-width-btn" onclick="cancelSubscription()">Cancel Subscription</button>
+              </div>
+            </div>
+          `;
+        } else if (status === "past_due") {
+          box.innerHTML = `
+            <div class="plan-box">
+              <span class="status-badge status-past_due">PAYMENT FAILED</span>
+              <p class="sub-renew">We couldn't process your last payment. Update your plan to keep watching.</p>
+              <a href="pricing.html" class="btn btn-red full-width-btn">Fix Payment</a>
+            </div>
+          `;
+        } else if (status === "canceled") {
+          const end = new Date(user.subscriptionEnd);
+          box.innerHTML = `
+            <div class="plan-box">
+              <span class="status-badge status-canceled">CANCELED</span>
+              <p class="sub-renew">Your access ends on ${end.toLocaleDateString()}.</p>
+              <a href="pricing.html" class="btn btn-red full-width-btn">Reactivate Subscription</a>
+            </div>
+          `;
+        } else {
+          box.innerHTML = `
+            <div class="plan-box">
+              <span class="status-badge status-none">NO PLAN</span>
+              <p class="sub-renew">You don't have an active subscription. Join MiniFlix to start watching.</p>
+              <a href="pricing.html" class="btn btn-red full-width-btn">Subscribe Now</a>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error(error);
+        box.innerHTML = "<p class='plans-loading'>Server error.</p>";
+      }
+    }
+
+    async function cancelSubscription() {
+      if (!confirm("Your access will continue until the end of your billing period. Cancel anyway?")) {
+        return;
+      }
+
+      const token = getToken();
+
+      try {
+        const res = await fetch("http://localhost:5000/api/payments/cancel-subscription", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert("Subscription canceled. " + data.message);
+          loadSubscription();
+        } else {
+          alert(data.message || "Failed to cancel subscription.");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Server error. Make sure the backend is running.");
+      }
+    }
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", function () {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    });
+
+    // Sign out all devices
+    document.getElementById("signOutAllBtn").addEventListener("click", function () {
+      if (confirm("This will sign you out from all devices. Continue?")) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+      }
+    });
+
+    // Search & Nav
+    document.getElementById("navSearch").addEventListener("keypress", function (e) {
+      if (e.key === "Enter" && this.value.trim()) {
+        window.location.href = `search.html?q=${encodeURIComponent(this.value)}`;
+      }
+    });
+
+    function updateNav() {
+      const token = getToken();
+      const user = JSON.parse(localStorage.getItem("user"));
+      const loginBtn = document.getElementById("navLoginBtn");
+      const avatar = document.querySelector(".avatar");
+      if (token && user) {
+        loginBtn.textContent = "Logout";
+        loginBtn.onclick = (e) => {
+          e.preventDefault();
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          location.reload();
+        };
+        avatar.textContent = user.name.charAt(0).toUpperCase();
+      }
+    }
+
+    loadProfile();
+    updateNav();
+  </script>
+  <script src="js/notifications.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to MiniFlix!</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="success-page">
+
+  <main class="success-wrap">
+    <div class="success-card">
+
+      <div class="success-icon" id="successIcon">✓</div>
+
+      <h1 class="success-title" id="successTitle">Verifying your subscription…</h1>
+
+      <p class="success-msg" id="successMsg">
+        Please wait while we confirm your payment with Stripe.
+      </p>
+
+      <div class="success-actions hidden" id="successActions">
+        <a href="index.html" class="btn btn-red">Start Watching</a>
+        <a href="profile.html" class="btn btn-light">View Profile</a>
+      </div>
+
+      <div class="success-actions hidden" id="errorActions">
+        <a href="pricing.html" class="btn btn-red">Back to Plans</a>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    const token = localStorage.getItem("token");
+
+    const title = document.getElementById("successTitle");
+    const msg = document.getElementById("successMsg");
+    const icon = document.getElementById("successIcon");
+    const successActions = document.getElementById("successActions");
+    const errorActions = document.getElementById("errorActions");
+
+    async function verifySubscription() {
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      if (!sessionId) {
+        showError("No checkout session found. Please try subscribing again.");
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/payments/verify-session?session_id=${encodeURIComponent(sessionId)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.message || "Verification failed.");
+          return;
+        }
+
+        // Success!
+        const endDate = new Date(data.subscriptionEnd).toLocaleDateString();
+
+        title.textContent = "You're in! 🎬";
+        msg.innerHTML = `
+          Your <b>${data.planName}</b> plan is now active.<br />
+          Your 7-day free trial ends on <b>${endDate}</b>.<br />
+          Enjoy unlimited streaming!
+        `;
+
+        successActions.classList.remove("hidden");
+
+      } catch (error) {
+        console.error(error);
+        showError("Server error. Make sure the backend is running.");
+      }
+    }
+
+    function showError(message) {
+      icon.textContent = "✕";
+      icon.classList.add("success-icon-error");
+      title.textContent = "Something went wrong";
+      msg.textContent = message;
+      errorActions.classList.remove("hidden");
+    }
+
+    verifySubscription();
+  </script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watch Movie - MiniFlix</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="watch-page">
+
+  <!-- Watch Header -->
+  <header class="watch-header">
+    <a href="index.html" class="logo">MINIFLIX</a>
+    <div class="watch-top-title">Now Playing</div>
+    <a href="#" id="backToDetails" class="back-link">← Movie Details</a>
+  </header>
+
+  <!-- Video Player -->
+  <main class="watch-main">
+        <!-- Paywall Overlay (hidden by default) -->
+    <section id="paywallGate" class="paywall-gate hidden">
+      <div class="paywall-card">
+        <div class="paywall-lock">🔒</div>
+        <h2 class="paywall-title">SUBSCRIBE TO WATCH</h2>
+        <p class="paywall-sub">
+          This movie is available to MiniFlix members only.<br />
+          Plans start at just <b>$9.99/month</b> with a 7-day free trial.
+        </p>
+
+        <ul class="paywall-perks">
+          <li><b class="perk-check">✓</b> Unlimited movies & shows</li>
+          <li><b class="perk-check">✓</b> Up to 4K Ultra HD quality</li>
+          <li><b class="perk-check">✓</b> Cancel anytime, no contracts</li>
+        </ul>
+
+        <a href="pricing.html" class="btn btn-red paywall-btn">Choose Your Plan</a>
+        <a href="index.html" class="paywall-back">← Back to browsing</a>
+      </div>
+    </section>
+    <div class="video-wrapper">
+      <div id="resumeToast" class="resume-toast hidden">
+        <span class="resume-icon">⏯</span>
+        <span id="resumeText">Resuming from 0:00</span>
+      </div>
+      <div id="saveIndicator" class="save-indicator">✓ Progress saved</div>
+      <video id="videoPlayer" controls poster="">
+        <source src="" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+
+    <!-- Movie Info -->
+    <section class="watch-info">
+      <div class="watch-info-left">
+        <h1 id="watchTitle">Loading...</h1>
+        <div class="watch-meta" id="watchMeta"></div>
+        <p class="watch-description" id="watchDesc"></p>
+      </div>
+      <div class="watch-actions">
+        <a href="#" id="detailsBtn" class="btn btn-light">View Details</a>
+        <button id="watchListBtn" class="btn btn-red">+ My List</button>
+      </div>
+    </section>
+
+    <!-- Up Next -->
+    <section class="watch-next">
+      <h2>Up Next</h2>
+      <div class="row-cards" id="upNextContainer"></div>
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const movieId = params.get("id");
+
+    async function loadWatchPage() {
+      if (!movieId) {
+        document.getElementById("watchTitle").textContent = "No movie ID provided";
+        return;
+      }
+
+      // Set back/details links
+      document.getElementById("backToDetails").href = `movie.html?id=${movieId}`;
+      document.getElementById("detailsBtn").href = `movie.html?id=${movieId}`;
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/movies/${movieId}`);
+        const movie = await response.json();
+
+        if (!response.ok) {
+          document.getElementById("watchTitle").textContent = movie.message || "Movie not found";
+          return;
+        }
+
+        // Populate video player
+        const video = document.getElementById("videoPlayer");
+        video.poster = movie.image;
+        video.querySelector("source").src = movie.video;
+        video.load();
+
+        // Populate info
+        document.getElementById("watchTitle").textContent = movie.title;
+        document.getElementById("watchMeta").textContent = `${movie.year} • ${movie.genre}`;
+        document.getElementById("watchDesc").textContent = movie.description;
+        document.title = `Watch ${movie.title} - MiniFlix`;
+
+        // Load Up Next (other movies excluding current)
+        loadUpNext(movie.id);
+
+      } catch (error) {
+        console.error(error);
+        document.getElementById("watchTitle").textContent = "Failed to load movie";
+      }
+    }
+
+    async function loadUpNext(currentId) {
+      try {
+        const res = await fetch("http://localhost:5000/api/movies");
+        const movies = await res.json();
+        const upNext = movies.filter(m => m.id != currentId).slice(0, 4);
+
+        document.getElementById("upNextContainer").innerHTML = upNext.map(m => `
+          <article class="movie-card">
+            <img src="${m.image}" alt="${m.title}" />
+            <div class="card-gradient"></div>
+            <div class="card-body">
+              <h3>${m.title}</h3>
+              <p>${m.year} • ${m.genre}</p>
+              <div class="card-actions">
+                <a href="watch.html?id=${m.id}" class="card-btn red">Play</a>
+                <a href="movie.html?id=${m.id}" class="card-btn">Details</a>
+              </div>
+            </div>
+          </article>
+        `).join("");
+      } catch(e) { console.error(e); }
+    }
+
+    // My List Toggle (will connect to backend in next step)
+    // Add/Remove from Watchlist via Backend
+const watchListBtn = document.getElementById("watchListBtn");
+
+watchListBtn.addEventListener("click", async function() {
+  const token = localStorage.getItem("token");
+  
+  if (!token) {
+    alert("Please login first to add movies to your list.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  const isAdded = this.textContent.includes("✓");
+
+  try {
+    if (isAdded) {
+      const res = await fetch(`http://localhost:5000/api/watchlist/${movieId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      
+      if (res.ok) {
+        this.textContent = "+ My List";
+        this.classList.remove("added");
+      }
+    } else {
+      const res = await fetch("http://localhost:5000/api/watchlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ movieId: parseInt(movieId) })
+      });
+
+      if (res.ok) {
+        this.textContent = "✓ Added to My List";
+        this.classList.add("added");
+      } else {
+        const data = await res.json();
+        alert(data.message || "Failed to add movie");
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Server error. Make sure backend is running.");
+  }
+});
+
+        // Check subscription before loading video
+    async function checkAccessAndLoad() {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/me", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        const user = await res.json();
+
+        if (user.subscriptionStatus !== "active") {
+          // Show paywall, hide video
+          document.getElementById("paywallGate").classList.remove("hidden");
+          document.querySelector(".video-wrapper").style.display = "none";
+          document.querySelector(".watch-info").style.display = "none";
+          document.querySelector(".watch-next").style.display = "none";
+          return;
+        }
+
+        // Subscriber — load the video normally
+        loadWatchPage();
+
+      } catch (error) {
+        console.error(error);
+        loadWatchPage(); // fallback: still try to load
+      }
+    }
+
+        // ---------- Resume & Progress Tracking ----------
+    const video = document.getElementById("videoPlayer");
+    const resumeToast = document.getElementById("resumeToast");
+    const saveIndicator = document.getElementById("saveIndicator");
+    let lastSave = 0;
+
+    function formatTime(s) {
+      s = Math.floor(s);
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      return h > 0
+        ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+        : `${m}:${String(sec).padStart(2, "0")}`;
+    }
+
+    function showResumeToast(seconds) {
+      document.getElementById("resumeText").textContent =
+        `Resuming from ${formatTime(seconds)}`;
+      resumeToast.classList.remove("hidden");
+      setTimeout(() => resumeToast.classList.add("hidden"), 4000);
+    }
+
+    function flashSaveIndicator() {
+      saveIndicator.classList.add("show");
+      setTimeout(() => saveIndicator.classList.remove("show"), 1800);
+    }
+
+    async function resumePlayback() {
+      const token = localStorage.getItem("token");
+      if (!token || !movieId) return;
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/progress/${movieId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const progress = await res.json();
+
+        if (progress && progress.seconds_watched > 10) {
+          video.currentTime = progress.seconds_watched;
+          showResumeToast(progress.seconds_watched);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function saveProgress() {
+      const token = localStorage.getItem("token");
+      if (!token || !movieId || !video.duration) return;
+
+      try {
+        await fetch("http://localhost:5000/api/progress", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            movieId: parseInt(movieId),
+            secondsWatched: video.currentTime,
+            duration: video.duration
+          })
+        });
+        flashSaveIndicator();
+      } catch (error) {
+        // Silent fail — don't interrupt the viewing experience
+      }
+    }
+
+    // Resume once video metadata is ready
+    video.addEventListener("loadedmetadata", resumePlayback, { once: true });
+
+    // Auto-save every 5 seconds while watching
+    video.addEventListener("timeupdate", () => {
+      const now = Date.now();
+      if (now - lastSave > 5000 && video.currentTime > 5) {
+        lastSave = now;
+        saveProgress();
+      }
+    });
+
+    // Save immediately on pause
+    video.addEventListener("pause", () => {
+      if (video.currentTime > 5) saveProgress();
+    });
+
+    checkAccessAndLoad();
+  </script>
+  <script src="js/notifications.js"></script>
+</body>
+</html>

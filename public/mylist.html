@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My List - MiniFlix</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="index.html" class="logo">MINIFLIX</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="mylist.html" class="active">My List</a>
+        <a href="admin.html">Admin</a>
+        <a href="profile.html">Profile</a>
+      </div>
+    </div>
+        <div class="nav-right">
+      <div class="search-box">
+        <input type="text" placeholder="Search movies..." id="navSearch" />
+      </div>
+
+      <!-- 🔔 Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <button class="notif-bell" id="notifBell">
+          🔔
+          <span class="notif-badge hidden" id="notifBadge">0</span>
+        </button>
+        <div class="notif-dropdown hidden" id="notifDropdown">
+          <div class="notif-header">
+            <span>Notifications</span>
+            <button class="notif-mark-read" id="markReadBtn">Mark all read</button>
+          </div>
+          <div class="notif-list" id="notifList">
+            <p class="notif-empty">No notifications yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <a href="profile.html" class="avatar">U</a>
+      <a href="login.html" class="btn-small" id="navLoginBtn">Login</a>
+    </div>
+  </nav>
+
+  <!-- My List Page -->
+  <main class="mylist-page">
+    <section class="page-header">
+      <h1>My List</h1>
+      <p>Movies you saved to watch later.</p>
+    </section>
+
+    <!-- Empty State -->
+    <section id="emptyState" class="empty-state hidden">
+      <h2>Your list is empty</h2>
+      <p>Add movies from the home page or movie details page.</p>
+      <a href="index.html" class="btn btn-red">Browse Movies</a>
+    </section>
+
+    <!-- Login Required State -->
+    <section id="loginRequired" class="empty-state hidden">
+      <h2>Please login to view your list</h2>
+      <a href="login.html" class="btn btn-red">Sign In</a>
+    </section>
+
+    <!-- My List Movies -->
+    <section id="myListGrid" class="mylist-grid"></section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="mylist.html">My List</a>
+      <a href="profile.html">Profile</a>
+      <a href="admin.html">Admin</a>
+      <a href="pricing.html">Plans</a>
+      <a href="#">Help</a>
+    </div>
+    <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
+  </footer>
+
+  <script>
+    const myListGrid = document.getElementById("myListGrid");
+    const emptyState = document.getElementById("emptyState");
+    const loginRequired = document.getElementById("loginRequired");
+
+    async function loadMyList() {
+      const token = localStorage.getItem("token");
+
+      // Check if user is logged in
+      if (!token) {
+        loginRequired.classList.remove("hidden");
+        emptyState.classList.add("hidden");
+        myListGrid.innerHTML = "";
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:5000/api/watchlist", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          loginRequired.classList.remove("hidden");
+          return;
+        }
+
+        const movies = await response.json();
+
+        if (movies.length === 0) {
+          emptyState.classList.remove("hidden");
+          myListGrid.innerHTML = "";
+          return;
+        }
+
+        emptyState.classList.add("hidden");
+        loginRequired.classList.add("hidden");
+
+        myListGrid.innerHTML = movies.map(movie => `
+          <article class="movie-card mylist-card">
+            <img src="${movie.image}" alt="${movie.title}" />
+            <div class="card-gradient"></div>
+            <div class="card-body">
+              <h3>${movie.title}</h3>
+              <p>${movie.year} • ${movie.genre}</p>
+              <div class="card-actions visible-actions">
+                <a href="watch.html?id=${movie.id}" class="card-btn red">Play</a>
+                <a href="movie.html?id=${movie.id}" class="card-btn">Details</a>
+                <button class="card-btn remove-btn" onclick="removeFromList(${movie.id})">Remove</button>
+              </div>
+            </div>
+          </article>
+        `).join("");
+
+      } catch (error) {
+        console.error(error);
+        myListGrid.innerHTML = "<p style='padding:20px;color:#ff8a91;'>Failed to load watchlist.</p>";
+      }
+    }
+
+    async function removeFromList(movieId) {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/watchlist/${movieId}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          loadMyList(); // Reload the list
+        } else {
+          alert("Failed to remove movie");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Server error");
+      }
+    }
+
+    // Search & Nav Logic
+    document.getElementById("navSearch").addEventListener("keypress", function(e) {
+      if (e.key === "Enter" && this.value.trim()) {
+        window.location.href = `search.html?q=${encodeURIComponent(this.value)}`;
+      }
+    });
+
+    function updateNav() {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user"));
+      const loginBtn = document.getElementById("navLoginBtn");
+      const avatar = document.querySelector(".avatar");
+      if (token && user) {
+        loginBtn.textContent = "Logout";
+        loginBtn.onclick = (e) => { e.preventDefault(); localStorage.removeItem("token"); localStorage.removeItem("user"); location.reload(); };
+        avatar.textContent = user.name.charAt(0).toUpperCase();
+      }
+    }
+
+    loadMyList();
+    updateNav();
+  </script>
+  <script src="js/notifications.js"></script>
+</body>
+</html>

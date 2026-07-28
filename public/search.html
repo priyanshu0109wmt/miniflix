@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search Movies - MiniFlix</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="index.html" class="logo">MINIFLIX</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="mylist.html">My List</a>
+        <a href="admin.html">Admin</a>
+        <a href="profile.html">Profile</a>
+        <a href="pricing.html">Plans</a>
+      </div>
+    </div>
+        <div class="nav-right">
+      <div class="search-box">
+        <input type="text" placeholder="Search movies..." id="navSearch" />
+      </div>
+
+      <!-- 🔔 Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <button class="notif-bell" id="notifBell">
+          🔔
+          <span class="notif-badge hidden" id="notifBadge">0</span>
+        </button>
+        <div class="notif-dropdown hidden" id="notifDropdown">
+          <div class="notif-header">
+            <span>Notifications</span>
+            <button class="notif-mark-read" id="markReadBtn">Mark all read</button>
+          </div>
+          <div class="notif-list" id="notifList">
+            <p class="notif-empty">No notifications yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <a href="profile.html" class="avatar">U</a>
+      <a href="login.html" class="btn-small" id="navLoginBtn">Login</a>
+    </div>
+  </nav>
+
+  <!-- Search Page -->
+  <main class="search-page">
+    <section class="page-header">
+      <h1>Search Movies</h1>
+      <p>Search by movie title, genre or year.</p>
+    </section>
+
+    <!-- Search Input -->
+    <section class="search-bar-card">
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input-large"
+        placeholder="Example: Action, Mountain, 2024..."
+      />
+    </section>
+
+    <!-- Search Result Info -->
+    <div id="searchResultInfo" class="search-result-info"></div>
+
+    <!-- Search Results -->
+    <section id="searchGrid" class="search-grid"></section>
+
+    <!-- No Results -->
+    <section id="noResults" class="empty-state hidden">
+      <h2>No results found</h2>
+      <p>Try searching with a different title, genre or year.</p>
+      <a href="index.html" class="btn btn-red">Browse Home</a>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="mylist.html">My List</a>
+      <a href="profile.html">Profile</a>
+      <a href="admin.html">Admin</a>
+      <a href="#">Help</a>
+    </div>
+    <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
+  </footer>
+
+  <script>
+    const searchInput = document.getElementById("searchInput");
+    const searchGrid = document.getElementById("searchGrid");
+    const noResults = document.getElementById("noResults");
+    const searchResultInfo = document.getElementById("searchResultInfo");
+
+    // Get search query from URL
+    const params = new URLSearchParams(window.location.search);
+    const queryFromURL = params.get("q") || "";
+    if (queryFromURL) searchInput.value = queryFromURL;
+
+    let debounceTimer;
+
+    async function performSearch(query) {
+      const searchText = query.trim();
+
+      if (searchText === "") {
+        searchGrid.innerHTML = "";
+        noResults.classList.add("hidden");
+        searchResultInfo.textContent = "Type something to search...";
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/movies/search?q=${encodeURIComponent(searchText)}`
+        );
+        const movies = await res.json();
+
+        if (movies.length === 0) {
+          searchGrid.innerHTML = "";
+          noResults.classList.remove("hidden");
+          searchResultInfo.textContent = `0 results for "${searchText}"`;
+          return;
+        }
+
+        noResults.classList.add("hidden");
+        searchResultInfo.textContent = `${movies.length} result(s) for "${searchText}"`;
+
+        searchGrid.innerHTML = movies.map(movie => `
+          <article class="movie-card search-card">
+            <img src="${movie.image}" alt="${movie.title}" />
+            <div class="card-gradient"></div>
+            <div class="card-body">
+              <h3>${movie.title}</h3>
+              <p>${movie.year} • ${movie.genre}</p>
+              <div class="card-actions visible-actions">
+                <a href="watch.html?id=${movie.id}" class="card-btn red">Play</a>
+                <a href="movie.html?id=${movie.id}" class="card-btn">Details</a>
+              </div>
+            </div>
+          </article>
+        `).join("");
+
+      } catch (error) {
+        console.error(error);
+        searchResultInfo.textContent = "Failed to search. Is backend running?";
+      }
+    }
+
+    // Debounced search input
+    searchInput.addEventListener("input", function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        performSearch(this.value);
+        // Update URL without reload
+        const newUrl = this.value.trim()
+          ? `search.html?q=${encodeURIComponent(this.value)}`
+          : "search.html";
+        window.history.replaceState({}, "", newUrl);
+      }, 300);
+    });
+
+    // Nav Logic
+    function updateNav() {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user"));
+      const loginBtn = document.getElementById("navLoginBtn");
+      const avatar = document.querySelector(".avatar");
+      if (token && user) {
+        loginBtn.textContent = "Logout";
+        loginBtn.onclick = (e) => { e.preventDefault(); localStorage.removeItem("token"); localStorage.removeItem("user"); location.reload(); };
+        avatar.textContent = user.name.charAt(0).toUpperCase();
+      }
+    }
+
+    updateNav();
+    performSearch(searchInput.value);
+  </script>
+  <script src="js/notifications.js"></script>
+</body>
+</html>

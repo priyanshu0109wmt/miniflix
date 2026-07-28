@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">
+  <rect width="400" height="600" fill="#101820"/>
+  <circle cx="315" cy="115" r="84" fill="#e50914"/>
+  <path d="M54 470h292v44H54z" fill="#ffffff"/>
+  <path d="M70 82h118v310H70z" fill="#263d54"/>
+  <path d="M104 117h50v240h-50z" fill="#7ab6d8"/>
+  <text x="54" y="550" fill="#fff" font-family="Arial" font-size="34" font-weight="700">MIDNIGHT</text>
+</svg>

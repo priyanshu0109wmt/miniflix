@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">
+  <rect width="400" height="600" fill="#0b1f26"/>
+  <path d="M0 360c92-42 165-36 240 0s118 43 160 20v220H0z" fill="#2a9d8f"/>
+  <path d="M80 250h240v130H80z" fill="#f4f1de"/>
+  <path d="M62 250l138-110 138 110z" fill="#e50914"/>
+  <text x="56" y="548" fill="#fff" font-family="Arial" font-size="36" font-weight="700">OCEAN HOUSE</text>
+</svg>

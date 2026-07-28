@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel - MiniFlix</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="index.html" class="logo">MINIFLIX</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="mylist.html">My List</a>
+        <a href="admin.html" class="active">Admin</a>
+        <a href="profile.html">Profile</a>
+        <a href="pricing.html">Plans</a>
+      </div>
+    </div>
+        <div class="nav-right">
+      <div class="search-box">
+        <input type="text" placeholder="Search movies..." id="navSearch" />
+      </div>
+
+      <!-- 🔔 Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <button class="notif-bell" id="notifBell">
+          🔔
+          <span class="notif-badge hidden" id="notifBadge">0</span>
+        </button>
+        <div class="notif-dropdown hidden" id="notifDropdown">
+          <div class="notif-header">
+            <span>Notifications</span>
+            <button class="notif-mark-read" id="markReadBtn">Mark all read</button>
+          </div>
+          <div class="notif-list" id="notifList">
+            <p class="notif-empty">No notifications yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <a href="profile.html" class="avatar">U</a>
+      <a href="login.html" class="btn-small" id="navLoginBtn">Login</a>
+    </div>
+  </nav>
+
+  <!-- Admin Page -->
+  <main class="admin-page">
+    <section class="page-header">
+      <h1>Admin Dashboard</h1>
+      <p>Add and manage movies for your MiniFlix platform.</p>
+    </section>
+
+    <!-- Access Denied State -->
+    <section id="accessDenied" class="empty-state hidden">
+      <h2>Access Denied</h2>
+      <p>You must be logged in as an admin to access this page.</p>
+      <a href="login.html" class="btn btn-red">Sign In</a>
+    </section>
+
+    <div id="adminContent" class="admin-layout hidden">
+      <!-- Add Movie Form -->
+      <section class="admin-card">
+        <h2>Add New Movie</h2>
+        <form id="addMovieForm" class="admin-form">
+          <input type="text" id="movieTitle" class="admin-input" placeholder="Movie Title" required />
+          <input type="number" id="movieYear" class="admin-input" placeholder="Year" min="1900" max="2100" required />
+          <input type="text" id="movieGenre" class="admin-input" placeholder="Genre (Example: Action, Thriller)" required />
+          <input type="text" id="movieImage" class="admin-input" placeholder="Image URL" required />
+          <input type="text" id="movieVideo" class="admin-input" placeholder="Video URL" required />
+          <textarea id="movieDescription" class="admin-textarea" placeholder="Movie Description" required></textarea>
+          <div id="adminMessage" class="admin-message"></div>
+          <button type="submit" class="admin-btn">Add Movie</button>
+        </form>
+      </section>
+
+      <!-- Movie List -->
+      <section class="admin-card">
+        <h2>Existing Movies</h2>
+        <div class="table-wrapper">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Poster</th>
+                <th>Title</th>
+                <th>Year</th>
+                <th>Genre</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminMovieList"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="mylist.html">My List</a>
+      <a href="profile.html">Profile</a>
+      <a href="admin.html">Admin</a>
+      <a href="#">Help</a>
+    </div>
+    <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
+  </footer>
+
+  <script>
+    const accessDenied = document.getElementById("accessDenied");
+    const adminContent = document.getElementById("adminContent");
+    const addMovieForm = document.getElementById("addMovieForm");
+    const adminMovieList = document.getElementById("adminMovieList");
+    const adminMessage = document.getElementById("adminMessage");
+
+    function getToken() { return localStorage.getItem("token"); }
+    function getUser() { return JSON.parse(localStorage.getItem("user")); }
+
+    function showAdminMessage(text, isError = false) {
+      adminMessage.textContent = text;
+      adminMessage.style.display = "block";
+      adminMessage.style.background = isError ? "rgba(229,9,20,0.12)" : "rgba(46,204,113,0.15)";
+      adminMessage.style.color = isError ? "#ff8a91" : "#2ecc71";
+      adminMessage.style.borderColor = isError ? "rgba(229,9,20,0.4)" : "rgba(46,204,113,0.35)";
+      setTimeout(() => { adminMessage.style.display = "none"; }, 3000);
+    }
+
+    async function checkAdminAccess() {
+      const token = getToken();
+      const user = getUser();
+
+      if (!token || !user || user.role !== "admin") {
+        accessDenied.classList.remove("hidden");
+        adminContent.classList.add("hidden");
+        return false;
+      }
+
+      accessDenied.classList.add("hidden");
+      adminContent.classList.remove("hidden");
+      return true;
+    }
+
+    async function loadAdminMovies() {
+      try {
+        const res = await fetch("http://localhost:5000/api/movies");
+        const movies = await res.json();
+
+        adminMovieList.innerHTML = movies.map(movie => `
+          <tr>
+            <td><img src="${movie.image}" alt="${movie.title}" class="table-poster" /></td>
+            <td>${movie.title}</td>
+            <td>${movie.year}</td>
+            <td>${movie.genre}</td>
+            <td>
+              <div class="table-actions">
+                <a href="movie.html?id=${movie.id}" class="table-btn edit-btn">View</a>
+                <button class="table-btn delete-btn" onclick="deleteMovie(${movie.id})">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join("");
+      } catch (error) {
+        console.error(error);
+        showAdminMessage("Failed to load movies", true);
+      }
+    }
+
+    async function deleteMovie(movieId) {
+      const token = getToken();
+      if (!confirm("Are you sure you want to delete this movie?")) return;
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/movies/${movieId}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          showAdminMessage("Movie deleted successfully");
+          loadAdminMovies();
+        } else {
+          const data = await res.json();
+          showAdminMessage(data.message || "Failed to delete", true);
+        }
+      } catch (error) {
+        showAdminMessage("Server error", true);
+      }
+    }
+
+    addMovieForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const token = getToken();
+
+      const movieData = {
+        title: document.getElementById("movieTitle").value,
+        year: parseInt(document.getElementById("movieYear").value),
+        genre: document.getElementById("movieGenre").value,
+        image: document.getElementById("movieImage").value,
+        video: document.getElementById("movieVideo").value,
+        description: document.getElementById("movieDescription").value
+      };
+
+      try {
+        const res = await fetch("http://localhost:5000/api/movies", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(movieData)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showAdminMessage("Movie added successfully!");
+          addMovieForm.reset();
+          loadAdminMovies();
+        } else {
+          showAdminMessage(data.message || "Failed to add movie", true);
+        }
+      } catch (error) {
+        showAdminMessage("Server error", true);
+      }
+    });
+
+    // Search & Nav Logic
+    document.getElementById("navSearch").addEventListener("keypress", function(e) {
+      if (e.key === "Enter" && this.value.trim()) {
+        window.location.href = `search.html?q=${encodeURIComponent(this.value)}`;
+      }
+    });
+
+    function updateNav() {
+      const token = getToken();
+      const user = getUser();
+      const loginBtn = document.getElementById("navLoginBtn");
+      const avatar = document.querySelector(".avatar");
+      if (token && user) {
+        loginBtn.textContent = "Logout";
+        loginBtn.onclick = (ev) => { ev.preventDefault(); localStorage.removeItem("token"); localStorage.removeItem("user"); location.reload(); };
+        avatar.textContent = user.name.charAt(0).toUpperCase();
+      }
+    }
+
+    // Initialize
+    (async () => {
+      updateNav();
+      const hasAccess = await checkAdminAccess();
+      if (hasAccess) loadAdminMovies();
+    })();
+  </script>
+  <script src="js/notifications.js"></script>
+</body>
+</html>

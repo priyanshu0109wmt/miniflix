@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600">
+  <rect width="400" height="600" fill="#070707"/>
+  <path d="M0 365h400v235H0z" fill="#14213d"/>
+  <path d="M65 150h58v215H65zM171 95h58v270h-58zM277 185h58v180h-58z" fill="#283b55"/>
+  <path d="M65 255h270v10H65z" fill="#e50914"/>
+  <text x="48" y="548" fill="#fff" font-family="Arial" font-size="38" font-weight="700">CITY DARK</text>
+</svg>

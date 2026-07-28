@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiniFlix - Home</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="index.html" class="logo">MINIFLIX</a>
+      <div class="nav-links">
+        <a href="index.html" class="active">Home</a>
+        <a href="mylist.html">My List</a>
+        <a href="pricing.html">Plans</a>
+        <a href="admin.html">Admin</a>
+        <a href="profile.html">Profile</a>
+      </div>
+    </div>
+
+        <div class="nav-right">
+      <div class="search-box">
+        <input type="text" placeholder="Search movies..." id="navSearch" />
+      </div>
+
+      <!-- 🔔 Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <button class="notif-bell" id="notifBell">
+          🔔
+          <span class="notif-badge hidden" id="notifBadge">0</span>
+        </button>
+        <div class="notif-dropdown hidden" id="notifDropdown">
+          <div class="notif-header">
+            <span>Notifications</span>
+            <button class="notif-mark-read" id="markReadBtn">Mark all read</button>
+          </div>
+          <div class="notif-list" id="notifList">
+            <p class="notif-empty">No notifications yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <a href="profile.html" class="avatar">U</a>
+      <a href="login.html" class="btn-small" id="navLoginBtn">Login</a>
+    </div>
+  </nav>
+
+  <!-- Hero Banner -->
+  <header class="hero">
+    <div class="hero-content">
+      <span class="hero-tag">Featured Movie</span>
+      <h1>Adventure in the Mountains</h1>
+      <div class="hero-meta">2024 • Action • 2h 15m • 16+</div>
+      <p>A thrilling adventure story where a group of friends must survive dangerous mountains, hidden secrets, and unexpected enemies.</p>
+      <div class="hero-actions">
+        <a href="watch.html?id=1" class="btn btn-red">Play</a>
+        <a href="movie.html?id=1" class="btn btn-light">More Info</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Dynamic Movies Section -->
+  <main class="main-content">
+
+    <!-- Continue Watching Row -->
+    <section class="movie-row hidden" id="continueRow">
+      <div class="row-header">
+        <h2>Continue Watching</h2>
+      </div>
+      <div class="row-cards" id="continueContainer"></div>
+    </section>
+
+    <!-- Because You Watched Row -->
+    <section class="movie-row hidden" id="recommendRow">
+      <div class="row-header">
+        <h2>Because You Watched</h2>
+      </div>
+      <div class="row-cards" id="recommendContainer"></div>
+    </section>
+
+    <!-- All Movies Row -->
+    <section class="movie-row">
+      <div class="row-header">
+        <h2>All Movies</h2>
+      </div>
+      <div class="row-cards" id="moviesContainer"></div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="mylist.html">My List</a>
+      <a href="pricing.html">Plans</a>
+      <a href="profile.html">Profile</a>
+      <a href="admin.html">Admin</a>
+      <a href="#">Help</a>
+    </div>
+    <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
+  </footer>
+
+  <script>
+    // 1. Load All Movies
+    async function loadMovies() {
+      const container = document.getElementById("moviesContainer");
+      try {
+        const response = await fetch("http://localhost:5000/api/movies");
+        const movies = await response.json();
+
+        if (!response.ok || movies.length === 0) {
+          container.innerHTML = "<p style='padding:20px;color:#b3b3b3;'>No movies found.</p>";
+          return;
+        }
+
+        container.innerHTML = movies.map(movie => `
+          <article class="movie-card">
+            <img src="${movie.image}" alt="${movie.title}" />
+            <div class="card-gradient"></div>
+            <div class="card-body">
+              <h3>${movie.title}</h3>
+              <p>${movie.year} • ${movie.genre}</p>
+              <div class="card-actions">
+                <a href="watch.html?id=${movie.id}" class="card-btn red">Play</a>
+                <a href="movie.html?id=${movie.id}" class="card-btn">Details</a>
+              </div>
+            </div>
+          </article>
+        `).join("");
+      } catch (error) {
+        console.error(error);
+        container.innerHTML = "<p style='padding:20px;color:#ff8a91;'>Failed to load movies. Is backend running?</p>";
+      }
+    }
+
+    // 2. Continue Watching Row
+    async function loadContinueWatching() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const res = await fetch("http://localhost:5000/api/progress", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+
+        const items = await res.json();
+        if (items.length === 0) return;
+
+        document.getElementById("continueRow").classList.remove("hidden");
+        document.getElementById("continueContainer").innerHTML = items.map(item => {
+          const pct = item.duration > 0
+            ? Math.min(100, Math.round((item.seconds_watched / item.duration) * 100))
+            : 0;
+
+          return `
+            <article class="movie-card">
+              <img src="${item.image}" alt="${item.title}" />
+              <div class="card-gradient"></div>
+              <div class="card-body">
+                <h3>${item.title}</h3>
+                <p>${item.year} • ${item.genre}</p>
+                <div class="progress-track">
+                  <div class="progress-fill" style="width:${pct}%"></div>
+                </div>
+                <div class="card-actions">
+                  <a href="watch.html?id=${item.id}" class="card-btn red">Resume</a>
+                  <a href="movie.html?id=${item.id}" class="card-btn">Details</a>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("");
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    // 3. Because You Watched Recommendations
+    async function loadRecommendations() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const res = await fetch("http://localhost:5000/api/ratings/recommendations", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+
+        const movies = await res.json();
+        if (movies.length === 0) return;
+
+        document.getElementById("recommendRow").classList.remove("hidden");
+        document.getElementById("recommendContainer").innerHTML = movies.map(movie => `
+          <article class="movie-card">
+            <img src="${movie.image}" alt="${movie.title}" />
+            <div class="card-gradient"></div>
+            <div class="card-body">
+              <h3>${movie.title}</h3>
+              <p>${movie.year} • ${movie.genre}</p>
+              <div class="card-actions">
+                <a href="watch.html?id=${movie.id}" class="card-btn red">Play</a>
+                <a href="movie.html?id=${movie.id}" class="card-btn">Details</a>
+              </div>
+            </div>
+          </article>
+        `).join("");
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    // 4. Search Redirect
+    document.getElementById("navSearch").addEventListener("keypress", function(e) {
+      if (e.key === "Enter" && this.value.trim() !== "") {
+        window.location.href = `search.html?q=${encodeURIComponent(this.value)}`;
+      }
+    });
+
+    // 5. Navbar Login/Logout State
+    function updateNav() {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user"));
+      const loginBtn = document.getElementById("navLoginBtn");
+      const avatar = document.querySelector(".avatar");
+
+      if (token && user) {
+        loginBtn.textContent = "Logout";
+        loginBtn.onclick = function(e) {
+          e.preventDefault();
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.reload();
+        };
+        avatar.textContent = user.name.charAt(0).toUpperCase();
+      } else {
+        loginBtn.textContent = "Login";
+        loginBtn.href = "login.html";
+        avatar.textContent = "U";
+      }
+    }
+
+    // Initialize Everything
+    loadMovies();
+    loadContinueWatching();
+    loadRecommendations();
+    updateNav();
+  </script>
+  <script src="js/notifications.js"></script>
+
+</body>
+</html>
