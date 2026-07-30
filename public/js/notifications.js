@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     try {
       // Load unread count
-      const countRes = await fetch("http://localhost:5000/api/notifications/unread-count", {
+      const countRes = await fetch(`${API_BASE}/api/notifications/unread-count`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (countRes.ok) {
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       // Load notification list
-      const listRes = await fetch("http://localhost:5000/api/notifications", {
+      const listRes = await fetch(`${API_BASE}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (listRes.ok) {
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!token) return;
 
       try {
-        await fetch("http://localhost:5000/api/notifications/mark-read", {
+        await fetch(`${API_BASE}/api/notifications/mark-read`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` }
         });

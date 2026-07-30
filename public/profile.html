@@ -148,6 +148,7 @@
     <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
   </footer>
 
+  <script src="js/config.js"></script>
   <script>
     const notLoggedIn = document.getElementById("notLoggedIn");
     const profileContent = document.getElementById("profileContent");
@@ -183,7 +184,7 @@
       const token = getToken();
 
       try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -263,7 +264,7 @@
       const token = getToken();
 
       try {
-        const res = await fetch("http://localhost:5000/api/payments/cancel-subscription", {
+        const res = await fetch(`${API_BASE}/api/payments/cancel-subscription`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` }
         });

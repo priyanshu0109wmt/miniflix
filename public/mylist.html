@@ -83,6 +83,7 @@
     <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
   </footer>
 
+  <script src="js/config.js"></script>
   <script>
     const myListGrid = document.getElementById("myListGrid");
     const emptyState = document.getElementById("emptyState");
@@ -100,7 +101,7 @@
       }
 
       try {
-        const response = await fetch("http://localhost:5000/api/watchlist", {
+        const response = await fetch(`${API_BASE}/api/watchlist`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -149,7 +150,7 @@
       if (!token) return;
 
       try {
-        const response = await fetch(`http://localhost:5000/api/watchlist/${movieId}`, {
+        const response = await fetch(`${API_BASE}/api/watchlist/${movieId}`, {
           method: "DELETE",
           headers: { "Authorization": `Bearer ${token}` }
         });

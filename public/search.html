@@ -90,6 +90,7 @@
     <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
   </footer>
 
+  <script src="js/config.js"></script>
   <script>
     const searchInput = document.getElementById("searchInput");
     const searchGrid = document.getElementById("searchGrid");
@@ -115,7 +116,7 @@
 
       try {
         const res = await fetch(
-          `http://localhost:5000/api/movies/search?q=${encodeURIComponent(searchText)}`
+          `${API_BASE}/api/movies/search?q=${encodeURIComponent(searchText)}`
         );
         const movies = await res.json();
 

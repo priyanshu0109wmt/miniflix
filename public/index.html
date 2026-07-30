@@ -104,12 +104,13 @@
     <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
   </footer>
 
+  <script src="js/config.js"></script>
   <script>
     // 1. Load All Movies
     async function loadMovies() {
       const container = document.getElementById("moviesContainer");
       try {
-        const response = await fetch("http://localhost:5000/api/movies");
+        const response = await fetch(`${API_BASE}/api/movies`);
         const movies = await response.json();
 
         if (!response.ok || movies.length === 0) {
@@ -143,7 +144,7 @@
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:5000/api/progress", {
+        const res = await fetch(`${API_BASE}/api/progress`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (!res.ok) return;
@@ -186,7 +187,7 @@
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:5000/api/ratings/recommendations", {
+        const res = await fetch(`${API_BASE}/api/ratings/recommendations`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (!res.ok) return;

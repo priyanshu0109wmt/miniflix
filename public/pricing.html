@@ -151,6 +151,7 @@
     <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
   </footer>
 
+  <script src="js/config.js"></script>
   <script>
     const plansGrid = document.getElementById("plansGrid");
 
@@ -170,7 +171,7 @@
   }
 
   try {
-    const res = await fetch("http://localhost:5000/api/payments/create-checkout-session", {
+    const res = await fetch(`${API_BASE}/api/payments/create-checkout-session`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -197,7 +198,7 @@
 
     async function loadPlans() {
       try {
-        const res = await fetch("http://localhost:5000/api/plans");
+        const res = await fetch(`${API_BASE}/api/plans`);
         const plans = await res.json();
 
         if (!res.ok || plans.length === 0) {

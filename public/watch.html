@@ -69,6 +69,7 @@
     </section>
   </main>
 
+  <script src="js/config.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     const movieId = params.get("id");
@@ -84,7 +85,7 @@
       document.getElementById("detailsBtn").href = `movie.html?id=${movieId}`;
 
       try {
-        const response = await fetch(`http://localhost:5000/api/movies/${movieId}`);
+        const response = await fetch(`${API_BASE}/api/movies/${movieId}`);
         const movie = await response.json();
 
         if (!response.ok) {
@@ -115,7 +116,7 @@
 
     async function loadUpNext(currentId) {
       try {
-        const res = await fetch("http://localhost:5000/api/movies");
+        const res = await fetch(`${API_BASE}/api/movies`);
         const movies = await res.json();
         const upNext = movies.filter(m => m.id != currentId).slice(0, 4);
 
@@ -153,7 +154,7 @@ watchListBtn.addEventListener("click", async function() {
 
   try {
     if (isAdded) {
-      const res = await fetch(`http://localhost:5000/api/watchlist/${movieId}`, {
+      const res = await fetch(`${API_BASE}/api/watchlist/${movieId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -163,7 +164,7 @@ watchListBtn.addEventListener("click", async function() {
         this.classList.remove("added");
       }
     } else {
-      const res = await fetch("http://localhost:5000/api/watchlist", {
+      const res = await fetch(`${API_BASE}/api/watchlist`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -196,7 +197,7 @@ watchListBtn.addEventListener("click", async function() {
       }
 
       try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -258,7 +259,7 @@ watchListBtn.addEventListener("click", async function() {
       if (!token || !movieId) return;
 
       try {
-        const res = await fetch(`http://localhost:5000/api/progress/${movieId}`, {
+        const res = await fetch(`${API_BASE}/api/progress/${movieId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const progress = await res.json();
@@ -277,7 +278,7 @@ watchListBtn.addEventListener("click", async function() {
       if (!token || !movieId || !video.duration) return;
 
       try {
-        await fetch("http://localhost:5000/api/progress", {
+        await fetch(`${API_BASE}/api/progress`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -104,6 +104,7 @@
     <p>MiniFlix Clone - Made for resume project using HTML, CSS, JavaScript, Node.js and MySQL.</p>
   </footer>
 
+  <script src="js/config.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     const movieId = params.get("id");
@@ -115,7 +116,7 @@
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/movies/${movieId}`);
+        const response = await fetch(`${API_BASE}/api/movies/${movieId}`);
         const movie = await response.json();
 
         if (!response.ok) {
@@ -150,7 +151,7 @@
 
     async function loadRelatedMovies(genre, currentId) {
       try {
-        const res = await fetch("http://localhost:5000/api/movies");
+        const res = await fetch(`${API_BASE}/api/movies`);
         const movies = await res.json();
         const related = movies.filter(m => m.id != currentId).slice(0, 5);
         
@@ -184,7 +185,7 @@
       const isAdded = this.textContent.includes("✓");
       try {
         if (isAdded) {
-          const res = await fetch(`http://localhost:5000/api/watchlist/${movieId}`, {
+          const res = await fetch(`${API_BASE}/api/watchlist/${movieId}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
           });
@@ -193,7 +194,7 @@
             this.classList.remove("added");
           }
         } else {
-          const res = await fetch("http://localhost:5000/api/watchlist", {
+          const res = await fetch(`${API_BASE}/api/watchlist`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -248,7 +249,7 @@
         }
 
         try {
-          const res = await fetch("http://localhost:5000/api/ratings", {
+          const res = await fetch(`${API_BASE}/api/ratings`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -285,7 +286,7 @@
       if (!token || !movieId) return;
 
       try {
-        const res = await fetch(`http://localhost:5000/api/ratings/${movieId}`, {
+        const res = await fetch(`${API_BASE}/api/ratings/${movieId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
