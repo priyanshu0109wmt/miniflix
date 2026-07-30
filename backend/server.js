@@ -1,11 +1,10 @@
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
-//console.log("STRIPE_SECRET_KEY =", process.env.STRIPE_SECRET_KEY);
-//console.log("STRIPE_PUBLISHABLE_KEY =", process.env.STRIPE_PUBLISHABLE_KEY);
-
 
 const express = require("express");
 const cors = require("cors");
+
+const db = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
 const movieRoutes = require("./routes/movieRoutes");
@@ -18,13 +17,49 @@ const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 
-app.use(cors());
+/* ===========================
+   MIDDLEWARE
+=========================== */
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true
+}));
+
 app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+
 app.use(express.static(path.join(__dirname, "../public")));
+
+/* ===========================
+   DATABASE CONNECTION TEST
+=========================== */
+
+async function connectDatabase() {
+  try {
+    const connection = await db.getConnection();
+
+    console.log("✅ Connected to TiDB Cloud successfully");
+
+    connection.release();
+  } catch (err) {
+    console.error("❌ Database Connection Failed");
+    console.error(err.message);
+    process.exit(1);
+  }
+}
+
+connectDatabase();
+
+/* ===========================
+   ROUTES
+=========================== */
 
 app.get("/", (req, res) => {
   res.json({
-    message: "MiniFlix API is running."
+    success: true,
+    message: "MiniFlix API is running 🚀"
   });
 });
 
@@ -37,8 +72,26 @@ app.use("/api/progress", progressRoutes);
 app.use("/api/ratings", ratingRoutes);
 app.use("/api/notifications", notificationRoutes);
 
+/* ===========================
+   404 HANDLER
+=========================== */
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "API Route Not Found"
+  });
+});
+
+/* ===========================
+   START SERVER
+=========================== */
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log("----------------------------------");
+  console.log(`🚀 MiniFlix Server Running`);
+  console.log(`🌐 http://localhost:${PORT}`);
+  console.log("----------------------------------");
 });
